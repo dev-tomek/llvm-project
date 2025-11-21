@@ -93,12 +93,14 @@ namespace {
 // Barriers
 //===----------------------------------------------------------------------===//
 
-/// Replace `gpu.barrier` with an `llvm.call` to `barrier` with
-/// `CLK_LOCAL_MEM_FENCE` argument, indicating work-group memory scope:
+/// Replace `gpu.barrier` with an `llvm.call` to `barrier` using
+/// `CLK_LOCAL_MEM_FENCE | CLK_GLOBAL_MEM_FENCE`, ensuring that all memory
+/// accesses are visible to all work-items in the work-group.
 /// ```
 /// // gpu.barrier
-/// %c1 = llvm.mlir.constant(1: i32) : i32
-/// llvm.call spir_funccc @_Z7barrierj(%c1) : (i32) -> ()
+/// // 3 = CLK_LOCAL_MEM_FENCE | CLK_GLOBAL_MEM_FENCE
+/// %c3 = llvm.mlir.constant(3: i32) : i32
+/// llvm.call spir_funccc @_Z7barrierj(%c3) : (i32) -> ()
 /// ```
 struct GPUBarrierConversion final : ConvertOpToLLVMPattern<gpu::BarrierOp> {
   using ConvertOpToLLVMPattern::ConvertOpToLLVMPattern;
